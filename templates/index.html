@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Analisis Sentimen</title>
+    <style>
+        :root { 
+            --bg: #0f172a; 
+            --card: #1e293b; 
+            --accent: #f97316; 
+            --white: #f8fafc;
+            --pos: #22c55e;
+            --neg: #ef4444;
+            --neu: #3b82f6;
+        }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--white); padding: 20px; margin: 0; }
+        .container { max-width: 1100px; margin: auto; }
+        .card { background: var(--card); padding: 25px; border-radius: 12px; margin-bottom: 25px; box-shadow: 0 10px 15px rgba(0,0,0,0.3); }
+        
+        /* Form Styling */
+        textarea { width: 100%; height: 80px; background: #0f172a; color: white; border: 1px solid #334155; border-radius: 8px; padding: 12px; box-sizing: border-box; font-size: 16px; }
+        button { background: var(--accent); color: white; padding: 12px 25px; border: none; border-radius: 6px; cursor: pointer; margin-top: 15px; font-weight: bold; transition: 0.3s; }
+        button:hover { opacity: 0.8; transform: translateY(-2px); }
+        
+        .result-box { margin-top: 20px; padding: 15px; border-radius: 8px; background: #334155; border: 2px dashed var(--accent); font-size: 20px; text-align: center; }
+
+        /* Layout untuk Grafik & Wordcloud */
+        .main-visual { text-align: center; margin-bottom: 20px; }
+        .main-visual img { max-width: 100%; height: auto; border-radius: 10px; background: white; }
+
+        /* Container Flexbox untuk Wordcloud Sejajar */
+        .wordcloud-row { 
+            display: flex; 
+            justify-content: space-between; 
+            gap: 15px; 
+            margin-top: 20px;
+        }
+        .wc-item { 
+            flex: 1; 
+            text-align: center; 
+            background: #0f172a; 
+            padding: 15px; 
+            border-radius: 10px; 
+            border-top: 4px solid transparent;
+        }
+        .wc-item img { width: 100%; border-radius: 8px; margin-top: 10px; }
+        
+        /* Label Warna */
+        .label-pos { border-color: var(--pos); color: var(--pos); }
+        .label-neg { border-color: var(--neg); color: var(--neg); }
+        .label-neu { border-color: var(--neu); color: var(--neu); }
+
+        h1, h3 { border-left: 5px solid var(--accent); padding-left: 15px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Sentiment AI: Reveiw HP murah yang populer di TikTok</h1>
+        
+        <div class="card">
+            <h3>Uji Sentimen Real-time</h3>
+            <form method="POST">
+                <textarea name="komentar" placeholder="Masukkan komentar netizen di sini...">{{ user_input }}</textarea>
+                <button type="submit">ANALISIS SEKARANG</button>
+            </form>
+            {% if result %}
+                <div class="result-box">Hasil Prediksi LSTM: <strong>{{ result }}</strong></div>
+            {% endif %}
+        </div>
+
+        <div class="card">
+            <h3>Performa Training Model (Accuracy & Loss)</h3>
+            <div class="main-visual">
+                <img src="/assets/training_history.png" alt="Training History">
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>Visualisasi Data Komentar</h3>
+            <div class="main-visual">
+                <p><strong>Distribusi Sentimen Keseluruhan</strong></p>
+                <img src="/assets/distribusi_sentimen.png" alt="Distribusi Sentimen" style="max-width: 700px;">
+            </div>
+
+            <div class="wordcloud-row">
+                <div class="wc-item label-pos">
+                    <strong>● POSITIF</strong>
+                    <img src="/assets/wordcloud_positif.png" alt="Wordcloud Positif">
+                </div>
+
+                <div class="wc-item label-neg">
+                    <strong>● NEGATIF</strong>
+                    <img src="/assets/wordcloud_negatif.png" alt="Wordcloud Negatif">
+                </div>
+
+                <div class="wc-item label-neu">
+                    <strong>● NETRAL</strong>
+                    <img src="/assets/wordcloud_netral.png" alt="Wordcloud Netral">
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
