@@ -45,7 +45,6 @@ def index():
             result = predict_sentiment(user_input)
     return render_template('index.html', result=result, user_input=user_input)
 
-app = app 
-
 if __name__ == '__main__':
     app.run(debug=True)
+app = app 
