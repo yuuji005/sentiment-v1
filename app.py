@@ -1,50 +1,53 @@
-from flask import Flask, render_template, request, send_from_directory
-import pandas as pd
-import numpy as np
-from tensorflow.keras.models import load_model
-from tensorflow.keras.preprocessing.text import Tokenizer
-from tensorflow.keras.preprocessing.sequence import pad_sequences
 import os
 import re
+import pickle
+import pandas as pd
+import numpy as np
+from flask import Flask, render_template, request
+from tensorflow.keras.models import load_model
+from tensorflow.keras.preprocessing.sequence import pad_sequences
 
 app = Flask(__name__)
 
-# Konfigurasi Path
+# Path
 MODEL_PATH = 'models/sentiment_model_lstm.h5'
-DATA_PATH = 'data/komentar_cleaned.csv'
-ASSETS_DIR = 'assets'
+TOKENIZER_PATH = 'models/tokenizer.pkl'  # simpan tokenizer dari training
 
-# Load Model & Tokenizer
-model = load_model(MODEL_PATH)
-df_train = pd.read_csv(DATA_PATH)
-max_words = 5000
-max_len = 100
-tokenizer = Tokenizer(num_words=max_words, lower=True)
-tokenizer.fit_on_texts(df_train['cleaned_comment'].astype(str).values)
+# Load model & tokenizer di global scope tapi dengan error handling
+try:
+    model = load_model(MODEL_PATH)
+    with open(TOKENIZER_PATH, 'rb') as f:
+        tokenizer = pickle.load(f)
+    max_len = 100
+    model_ready = True
+except Exception as e:
+    print(f"Error loading model/tokenizer: {e}")
+    model_ready = False
 
 def predict_sentiment(text):
+    if not model_ready:
+        return "Model belum siap"
     text = text.lower()
     text = re.sub(r'[^a-zA-Z\s]', '', text)
-    tkn = tokenizer.texts_to_sequences([text])
-    tkn = pad_sequences(tkn, maxlen=max_len)
-    pred = model.predict(tkn)
+    seq = tokenizer.texts_to_sequences([text])
+    padded = pad_sequences(seq, maxlen=max_len)
+    pred = model.predict(padded)
     labels = ['Negatif', 'Netral', 'Positif']
     return labels[np.argmax(pred)]
 
-@app.route('/assets/<filename>')
-def serve_assets(filename):
-    return send_from_directory(ASSETS_DIR, filename)
-
 @app.route('/', methods=['GET', 'POST'])
 def index():
+    if not model_ready:
+        return "Model sedang error, coba lagi nanti.", 500
     result = None
     user_input = ""
     if request.method == 'POST':
-        user_input = request.form['komentar']
+        user_input = request.form.get('komentar', '')
         if user_input:
             result = predict_sentiment(user_input)
     return render_template('index.html', result=result, user_input=user_input)
 
-if __name__ == '__main__':
-    app.run(debug=True)
-app = app 
+# Optional: health check
+@app.route('/health')
+def health():
+    return "OK" if model_ready else "Model not loaded", 200 if model_ready else 500
